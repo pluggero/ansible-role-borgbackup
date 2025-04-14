@@ -6,10 +6,21 @@
     - ../../vars/molecule_vars.yml
 
   tasks:
-    - name: Ensure required packages are installed
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "{{ lookup('ansible.builtin.first_found', params) }}"
+      vars:
+        params:
+          files:
+            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+            - "{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"
+            - "{{ ansible_distribution }}.yml"
+            - "{{ ansible_os_family }}.yml"
+          paths:
+            - "../../vars"
+
+    - name: Install verify dependencies
       ansible.builtin.package:
-        name:
-          - python3-pexpect
+        name: "{{ borgbackup_test_pkgs }}"
         state: present
       become: true
 

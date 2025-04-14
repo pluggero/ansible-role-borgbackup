@@ -1,4 +1,7 @@
 ---
+borgbackup_test_pkgs:
+  - python-pexpect # For molecule verify
+
 borgbackup_dep_pkgs:
   - inetutils # For hostname
   - cryptsetup # For LUKS
