@@ -1,0 +1,22 @@
+# Managed by Ansible, please don't edit manually
+P {{ borg_patterns.style }}
+
+{# Recursion roots #}
+{% for root in borg_patterns.roots %}
+R {{ root }}
+{% endfor %}
+
+{# Include patterns #}
+{% for include in borg_patterns.includes %}
++ {{ include }}
+{% endfor %}
+
+{# Exclude patterns #}
+{% for exclude in borg_patterns.excludes %}
+- {{ exclude }}
+{% endfor %}
+
+{# Exclude (no-recurse) patterns #}
+{% for norecurse in borg_patterns.excludes_no_recurse %}
+! {{ norecurse }}
+{% endfor %}

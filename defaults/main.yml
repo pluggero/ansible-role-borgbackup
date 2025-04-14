@@ -1,0 +1,47 @@
+---
+borgbackup_install_method: "package"
+
+borgbackup_config_dir: "/etc/backups"
+borgbackup_borg_repo: "/mnt/backup/borg-backups"
+
+borgbackup_backup_device: "sda"
+borgbackup_backup_device_id_serial_short: ""
+borgbackup_backup_device_password: ""
+borgbackup_backup_device_keyfile: "{{ borgbackup_config_dir }}/keyfile"
+borgbackup_backup_device_symlink: "backupDisk"
+# If you change this, you need to also change the name of the mount service
+borgbackup_backup_device_mountpoint: "/mnt/backup"
+
+borgbackup_user: "{{ ansible_user }}"
+borgbackup_group: "{{ ansible_user }}"
+
+# Retention policy for pruning old backups
+borgbackup_options:
+  keep_daily: 7 # Number of daily backups to keep
+  keep_weekly: 4 # Number of weekly backups to keep
+  keep_monthly: 6 # Number of monthly backups to keep
+
+# All Borg matching patterns grouped under one variable
+borg_patterns:
+  # Pattern style:
+  # - sh: shell-style (e.g. *.log, /home/*)
+  # - re: regular expressions
+  # - pf: path prefix
+  # - fm: file magic
+  # - pp: pattern prefix (default when using --patterns-from)
+  style: sh
+
+  # List of recursion roots. These define starting points for backups.
+  # Must be plain paths (no globs).
+  roots: []
+
+  # Files or directories to explicitly include,
+  # even if they fall under an exclude rule.
+  includes: []
+
+  # Files or directories to exclude (recursive by default).
+  excludes: []
+
+  # Files or directories to exclude without descending into them.
+  # Useful to skip large folders quickly.
+  excludes_no_recurse: []

@@ -1,0 +1,4 @@
+# Managed by Ansible, please don't edit manually
+ACTION=="add", KERNEL=="{{ borgbackup_backup_device }}", ENV{ID_SERIAL_SHORT}=="{{ borgbackup_backup_device_id_serial_short }}", \
+    SYMLINK+="{{ borgbackup_backup_device_symlink }}", TAG+="systemd", \
+    ENV{SYSTEMD_WANTS}+="backup-disk-decrypt.service"

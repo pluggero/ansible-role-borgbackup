@@ -1,0 +1,7 @@
+---
+borgbackup_dep_pkgs:
+  - hostname
+  - cryptsetup # For LUKS
+
+borgbackup_distro_pkgs:
+  - borgbackup

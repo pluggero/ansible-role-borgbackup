@@ -1,0 +1,6 @@
+---
+- name: Create systemd services to automount disk
+  block:
+    - name: Start systemd services install script
+      ansible.builtin.include_tasks:
+        file: noauto_create_systemd_service.yml

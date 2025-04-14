@@ -1,0 +1,16 @@
+---
+- name: Assert that borgbackup_backup_device is valid
+  ansible.builtin.assert:
+    that:
+      - borgbackup_backup_device | length > 0
+    fail_msg: >-
+      The value of "borgbackup_backup_device" ({{ borgbackup_backup_device }}) is empty.
+    success_msg: "The value of 'borgbackup_backup_device' is valid."
+
+- name: Assert that borgbackup_backup_device_id_serial_short is valid
+  ansible.builtin.assert:
+    that:
+      - borgbackup_backup_device_id_serial_short | length > 0
+    fail_msg: >-
+      The value of "borgbackup_backup_device_id_serial_short" ({{ borgbackup_backup_device_id_serial_short }}) is empty.
+    success_msg: "The value of 'borgbackup_backup_device_id_serial_short' is valid."

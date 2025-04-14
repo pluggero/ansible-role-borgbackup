@@ -1,0 +1,38 @@
+---
+- name: Configure borgbackup
+  block:
+    - name: Ensure config folder exists
+      ansible.builtin.file:
+        path: "{{ borgbackup_config_dir }}"
+        state: directory
+        mode: "0700"
+        owner: "{{ borgbackup_user }}"
+        group: "{{ borgbackup_group }}"
+      become: true
+
+    - name: Ensure backup script exists
+      ansible.builtin.template:
+        src: "backup.sh.j2"
+        dest: "{{ borgbackup_config_dir }}/backup.sh"
+        mode: "0700"
+        owner: "{{ borgbackup_user }}"
+        group: "{{ borgbackup_group }}"
+      become: true
+
+    - name: Ensure backup patterns exist
+      ansible.builtin.template:
+        src: "borgPatterns.lst.j2"
+        dest: "{{ borgbackup_config_dir }}/borgPatterns.lst"
+        mode: "0600"
+        owner: "{{ borgbackup_user }}"
+        group: "{{ borgbackup_group }}"
+      become: true
+
+    - name: Ensure keyfile exists
+      ansible.builtin.copy:
+        dest: "{{ borgbackup_backup_device_keyfile }}"
+        content: "{{ borgbackup_backup_device_password }}"
+        mode: "0600"
+        owner: "{{ borgbackup_user }}"
+        group: "{{ borgbackup_group }}"
+      become: true

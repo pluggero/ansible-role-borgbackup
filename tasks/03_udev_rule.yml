@@ -1,0 +1,6 @@
+---
+- name: Create udev rule to automount disk
+  block:
+    - name: Start udev rule install script
+      ansible.builtin.include_tasks:
+        file: noauto_create_udev_automount.yml

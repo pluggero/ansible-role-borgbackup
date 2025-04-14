@@ -1,0 +1,20 @@
+---
+- name: Converge
+  hosts: all
+
+  vars:
+    ansible_user: vagrant
+
+  vars_files:
+    - molecule_vars.yml
+
+  pre_tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 600
+      become: true
+      when: ansible_os_family == 'Debian'
+
+  roles:
+    - role: pluggero.borgbackup

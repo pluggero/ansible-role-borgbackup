@@ -1,0 +1,13 @@
+# Managed by Ansible, please don't edit manually
+[Unit]
+Description=Mount {{ borgbackup_backup_device_symlink }}
+Requires=dev-mapper-{{ borgbackup_backup_device_symlink }}.device
+After=dev-mapper-{{ borgbackup_backup_device_symlink }}.device
+PartOf=backup-disk-decrypt.service
+
+[Mount]
+What=/dev/mapper/{{ borgbackup_backup_device_symlink }}
+Where={{ borgbackup_backup_device_mountpoint }}
+Type=ext4
+Options=defaults
+

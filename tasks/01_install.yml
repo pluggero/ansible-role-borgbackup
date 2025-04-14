@@ -1,0 +1,29 @@
+---
+- name: Install borgbackup
+  block:
+    - name: Validate variables
+      ansible.builtin.include_tasks: noauto_validate_vars.yml
+
+    - name: Include OS-specific variables
+      ansible.builtin.include_vars: "{{ var_file }}"
+      with_first_found:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution }}.yml"
+        - "{{ ansible_os_family }}.yml"
+        - "{{ ansible_lsb.id }}.yml"
+      loop_control:
+        loop_var: var_file
+
+    - name: Ensure mount folder exists
+      ansible.builtin.file:
+        path: "{{ borgbackup_backup_device_mountpoint }}"
+        state: directory
+        mode: "0700"
+        owner: "{{ borgbackup_user }}"
+        group: "{{ borgbackup_group }}"
+      become: true
+
+    - name: Install borgbackup
+      ansible.builtin.include_tasks:
+        file: noauto_install_{{ borgbackup_install_method }}.yml

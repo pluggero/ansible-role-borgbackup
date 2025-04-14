@@ -1,0 +1,4 @@
+borgbackup_backup_device: "loop0" # Match whatever losetup returns
+borgbackup_backup_device_id_serial_short: "MOCKSERIAL1234"
+borgbackup_backup_device_password: "TestPassword123"
+borgbackup_backup_device_symlink: "backupDisk"

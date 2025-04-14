@@ -1,0 +1,71 @@
+---
+- name: Verify
+  hosts: all
+
+  vars_files:
+    - molecule_vars.yml
+
+  tasks:
+    - name: Update APT cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 600
+      become: true
+
+    - name: Ensure required packages are installed
+      ansible.builtin.apt:
+        name:
+          - cryptsetup
+          - python3-pexpect
+        state: present
+      become: true
+
+    - name: Create a 200MB disk image
+      ansible.builtin.command: fallocate -l 200M /root/disk.img
+      args:
+        creates: /root/disk.img
+      become: true
+
+    - name: Format disk image as LUKS with password
+      ansible.builtin.expect:
+        command: cryptsetup luksFormat /root/disk.img
+        responses:
+          "Are you sure?": "YES"
+          "Enter passphrase for /root/disk.img:": "{{ borgbackup_backup_device_password }}"
+          "Verify passphrase:": "{{ borgbackup_backup_device_password }}"
+      args:
+        creates: /dev/mapper/{{ borgbackup_backup_device_symlink }}
+      # no_log: true
+      become: true
+
+    - name: Open LUKS device with password
+      ansible.builtin.expect:
+        command: cryptsetup luksOpen /root/disk.img {{ borgbackup_backup_device_symlink }}
+        responses:
+          "Enter passphrase for /root/disk.img:": "{{ borgbackup_backup_device_password }}"
+      become: true
+
+    - name: Format LUKS volume with ext4
+      ansible.builtin.command: mkfs.ext4 /dev/mapper/{{ borgbackup_backup_device_symlink }}
+      become: true
+
+    - name: Close LUKS device
+      ansible.builtin.command: cryptsetup close {{ borgbackup_backup_device_symlink }}
+      become: true
+
+    - name: Setup loop device from disk image
+      ansible.builtin.command: losetup --find --show /root/disk.img
+      register: loopdev_result
+      become: true
+
+    - name: Simulate udev symlink
+      ansible.builtin.file:
+        src: "{{ loopdev_result.stdout }}"
+        dest: "/dev/{{ borgbackup_backup_device_symlink }}"
+        state: link
+        force: true
+      become: true
+
+    - name: Debug loop device
+      ansible.builtin.debug:
+        var: loopdev_result.stdout
