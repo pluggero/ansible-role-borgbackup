@@ -2,7 +2,10 @@
 
 [![CI](https://github.com/pluggero/ansible-role-borgbackup/actions/workflows/ci.yml/badge.svg)](https://github.com/pluggero/ansible-role-borgbackup/actions/workflows/ci.yml) [![Ansible Galaxy downloads](https://img.shields.io/ansible/role/d/pluggero/borgbackup?label=Galaxy%20downloads&logo=ansible&color=%23096598)](https://galaxy.ansible.com/ui/standalone/roles/pluggero/borgbackup)
 
-An Ansible Role that installs a basic configuration of borgbackup.
+An Ansible Role that installs a basic configuration of borgbackup ans sets up a basic backup workflow.
+This role is intended for a backup strategy that includes an external disk.
+The external disk is encrypted with LUKS whereas the borg repository is stored unencrypted.
+When the disk is connected, it will be decrypted and mounted automatically.
 
 ## Requirements
 
@@ -14,8 +17,69 @@ Available variables are listed below, along with default values (see `defaults/m
 
 ```yaml
 borg_backup_device: "sda"
+```
+
+- This is the device of the external disk
+
+```yaml
+borgbackup_backup_device_password: ""
+```
+
+- This is the LUKS password for the external disk. This is required to unlock the disk.
+
+```yaml
+borgbackup_backup_device_keyfile: "{{ borgbackup_config_dir }}/keyfile"
+```
+
+- The password is stored in a keyfile. This is the path to the keyfile.
+
+```yaml
 borg_backup_device_id_serial_short: ""
 ```
+
+- This is the serial number of the external disk. This is used to identify the disk when it is connected.
+- **NOTE**: You can find out the device ID by running the following command (adjust the device accordingly):
+
+```
+sudo udevadm info -n /dev/sda | grep SERIAL
+```
+
+```yaml
+borgbackup_options:
+  keep_daily: 7 # Number of daily backups to keep
+  keep_weekly: 4 # Number of weekly backups to keep
+  keep_monthly: 6 # Number of monthly backups to keep
+```
+
+- This is the retention policy for the backups.
+
+```yaml
+borg_patterns:
+  # Pattern style:
+  # - sh: shell-style (e.g. *.log, /home/*)
+  # - re: regular expressions
+  # - pf: path prefix
+  # - fm: file magic
+  # - pp: pattern prefix (default when using --patterns-from)
+  style: sh
+
+  # List of recursion roots. These define starting points for backups.
+  # Must be plain paths (no globs).
+  roots: []
+
+  # Files or directories to explicitly include,
+  # even if they fall under an exclude rule.
+  includes: []
+
+  # Files or directories to exclude (recursive by default).
+  excludes: []
+
+  # Files or directories to exclude without descending into them.
+  # Useful to skip large folders quickly.
+  excludes_no_recurse: []
+```
+
+- This is the list of files and directories to include and exclude from the backup.
 
 ## Dependencies
 
