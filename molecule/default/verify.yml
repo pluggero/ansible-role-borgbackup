@@ -6,9 +6,9 @@
     - molecule_vars.yml
 
   tasks:
-    - name: Update APT cache
+    - name: Update apt cache
       ansible.builtin.apt:
-        update_cache: yes
+        update_cache: true
         cache_valid_time: 600
       become: true
 
@@ -20,43 +20,49 @@
         state: present
       become: true
 
-    - name: Create a 200MB disk image
-      ansible.builtin.command: fallocate -l 200M /root/disk.img
-      args:
-        creates: /root/disk.img
-      become: true
+    - name: Create fake backup disk
+      block:
+        - name: Create a 200MB disk image
+          ansible.builtin.command: fallocate -l 200M /root/disk.img
+          args:
+            creates: /root/disk.img
+          become: true
 
-    - name: Format disk image as LUKS with password
-      ansible.builtin.expect:
-        command: cryptsetup luksFormat /root/disk.img
-        responses:
-          "Are you sure?": "YES"
-          "Enter passphrase for /root/disk.img:": "{{ borgbackup_backup_device_password }}"
-          "Verify passphrase:": "{{ borgbackup_backup_device_password }}"
-      args:
-        creates: /dev/mapper/{{ borgbackup_backup_device_symlink }}
-      # no_log: true
-      become: true
+        - name: Format disk image as LUKS with password
+          ansible.builtin.expect:
+            command: cryptsetup luksFormat /root/disk.img
+            responses:
+              "Are you sure?": "YES"
+              "Enter passphrase for /root/disk.img:": "{{ borgbackup_backup_device_password }}"
+              "Verify passphrase:": "{{ borgbackup_backup_device_password }}"
+          args:
+            creates: /dev/mapper/{{ borgbackup_backup_device_symlink }}
+          # no_log: true
+          become: true
 
-    - name: Open LUKS device with password
-      ansible.builtin.expect:
-        command: cryptsetup luksOpen /root/disk.img {{ borgbackup_backup_device_symlink }}
-        responses:
-          "Enter passphrase for /root/disk.img:": "{{ borgbackup_backup_device_password }}"
-      become: true
+        - name: Open LUKS device with password
+          ansible.builtin.expect:
+            command: cryptsetup luksOpen /root/disk.img {{ borgbackup_backup_device_symlink }}
+            responses:
+              "Enter passphrase for /root/disk.img:": "{{ borgbackup_backup_device_password }}"
+          become: true
 
-    - name: Format LUKS volume with ext4
-      ansible.builtin.command: mkfs.ext4 /dev/mapper/{{ borgbackup_backup_device_symlink }}
-      become: true
+        - name: Format LUKS volume with ext4
+          ansible.builtin.command: mkfs.ext4 /dev/mapper/{{ borgbackup_backup_device_symlink }}
+          become: true
 
-    - name: Close LUKS device
-      ansible.builtin.command: cryptsetup close {{ borgbackup_backup_device_symlink }}
-      become: true
+        - name: Close LUKS device
+          ansible.builtin.command: cryptsetup close {{ borgbackup_backup_device_symlink }}
+          become: true
 
-    - name: Setup loop device from disk image
-      ansible.builtin.command: losetup --find --show /root/disk.img
-      register: loopdev_result
-      become: true
+        - name: Setup loop device from disk image
+          ansible.builtin.command: losetup --find --show /root/disk.img
+          register: loopdev_result
+          become: true
+
+        - name: Debug loop device
+          ansible.builtin.debug:
+            var: loopdev_result.stdout
 
     - name: Simulate udev symlink
       ansible.builtin.file:
@@ -66,6 +72,51 @@
         force: true
       become: true
 
-    - name: Debug loop device
-      ansible.builtin.debug:
-        var: loopdev_result.stdout
+    - name: Simulate udev systemd trigger
+      ansible.builtin.systemd:
+        name: backup-disk-decrypt.service
+        state: started
+      become: true
+
+    - name: Wait for systemd to process the event
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: Check if backup-disk-decrypt.service is active
+      ansible.builtin.systemd:
+        name: backup-disk-decrypt.service
+        state: started
+      register: decrypt_service_status
+      become: true
+
+    - name: Assert backup-disk-decrypt.service is active
+      ansible.builtin.assert:
+        that:
+          - decrypt_service_status.status.ActiveState == "active"
+        fail_msg: "backup-disk-decrypt.service is not active"
+
+    - name: Check if mnt-backup.mount is active
+      ansible.builtin.systemd:
+        name: mnt-backup.mount
+        state: started
+      register: mount_status
+      become: true
+
+    - name: Assert mnt-backup.mount is active
+      ansible.builtin.assert:
+        that:
+          - mount_status.status.ActiveState == "active"
+        fail_msg: "mnt-backup.mount is not active"
+
+    - name: Check if /mnt/backup is a mountpoint
+      ansible.builtin.command:
+        cmd: "mountpoint /mnt/backup"
+      register: mount_check
+      changed_when: false
+      ignore_errors: true
+
+    - name: Assert that /mnt/backup is mounted
+      ansible.builtin.assert:
+        that:
+          - "'is a mountpoint' in mount_check.stdout"
+        fail_msg: "/mnt/backup is not mounted"
