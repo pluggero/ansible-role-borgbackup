@@ -3,19 +3,12 @@
   hosts: all
 
   vars_files:
-    - molecule_vars.yml
+    - ../../vars/molecule_vars.yml
 
   tasks:
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: true
-        cache_valid_time: 600
-      become: true
-
     - name: Ensure required packages are installed
-      ansible.builtin.apt:
+      ansible.builtin.package:
         name:
-          - cryptsetup
           - python3-pexpect
         state: present
       become: true
@@ -23,9 +16,11 @@
     - name: Create fake backup disk
       block:
         - name: Create a 200MB disk image
-          ansible.builtin.command: fallocate -l 200M /root/disk.img
+          ansible.builtin.command:
+            cmd: "fallocate -l 200M /root/disk.img"
           args:
             creates: /root/disk.img
+          changed_when: true
           become: true
 
         - name: Format disk image as LUKS with password
@@ -48,16 +43,22 @@
           become: true
 
         - name: Format LUKS volume with ext4
-          ansible.builtin.command: mkfs.ext4 /dev/mapper/{{ borgbackup_backup_device_symlink }}
+          ansible.builtin.command:
+            cmd: "mkfs.ext4 /dev/mapper/{{ borgbackup_backup_device_symlink }}"
+          changed_when: true
           become: true
 
         - name: Close LUKS device
-          ansible.builtin.command: cryptsetup close {{ borgbackup_backup_device_symlink }}
+          ansible.builtin.command:
+            cmd: "cryptsetup close {{ borgbackup_backup_device_symlink }}"
+          changed_when: true
           become: true
 
         - name: Setup loop device from disk image
-          ansible.builtin.command: losetup --find --show /root/disk.img
+          ansible.builtin.command:
+            cmd: "losetup --find --show /root/disk.img"
           register: loopdev_result
+          changed_when: false
           become: true
 
         - name: Debug loop device

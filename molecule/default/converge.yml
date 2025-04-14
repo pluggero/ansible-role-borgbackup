@@ -6,7 +6,7 @@
     ansible_user: vagrant
 
   vars_files:
-    - molecule_vars.yml
+    - ../../vars/molecule_vars.yml
 
   pre_tasks:
     - name: Update apt cache
