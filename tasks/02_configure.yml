@@ -1,6 +1,15 @@
 ---
 - name: Configure borgbackup
   block:
+    - name: Ensure mount folder exists
+      ansible.builtin.file:
+        path: "{{ borgbackup_backup_device_mountpoint }}"
+        state: directory
+        mode: "0700"
+        owner: "{{ borgbackup_user }}"
+        group: "{{ borgbackup_group }}"
+      become: true
+
     - name: Ensure config folder exists
       ansible.builtin.file:
         path: "{{ borgbackup_config_dir }}"
