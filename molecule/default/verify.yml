@@ -53,6 +53,13 @@
               "Enter passphrase for /root/disk.img:": "{{ borgbackup_backup_device_password }}"
           become: true
 
+        - name: Add keyfile to LUKS container
+          ansible.builtin.expect:
+            command: cryptsetup luksAddKey /dev/{{ borgbackup_backup_device }} {{ borgbackup_backup_device_keyfile }}
+            responses:
+              "Enter any existing passphrase:": "{{ borgbackup_backup_device_password }}"
+          become: true
+
         - name: Format LUKS volume with ext4
           ansible.builtin.command:
             cmd: "mkfs.ext4 /dev/mapper/{{ borgbackup_backup_device_symlink }}"

@@ -1,4 +1,3 @@
-
 yamllint
 ansible
 # Pinned versions because of https://github.com/ansible-community/molecule-plugins/issues/301

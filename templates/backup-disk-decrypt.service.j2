@@ -10,4 +10,3 @@ ExecStartPre=/bin/sleep 3
 ExecStart=cryptsetup luksOpen /dev/{{ borgbackup_backup_device_symlink }} {{ borgbackup_backup_device_symlink }} -d {{ borgbackup_backup_device_keyfile }}
 ExecStartPost=/bin/systemctl start mnt-backup.mount
 ExecStop=cryptsetup close {{ borgbackup_backup_device_symlink }}
-

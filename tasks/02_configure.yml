@@ -37,10 +37,15 @@
         group: "{{ borgbackup_group }}"
       become: true
 
-    - name: Ensure keyfile exists
-      ansible.builtin.copy:
-        dest: "{{ borgbackup_backup_device_keyfile }}"
-        content: "{{ borgbackup_backup_device_password }}"
+    - name: Create keyfile from /dev/urandom if it does not exist
+      ansible.builtin.command:
+        cmd: "dd if=/dev/urandom of={{ borgbackup_backup_device_keyfile }} bs=1024 count=4"
+        creates: "{{ borgbackup_backup_device_keyfile }}"
+      become: true
+
+    - name: Set file permissions on keyfile
+      ansible.builtin.file:
+        path: "{{ borgbackup_backup_device_keyfile }}"
         mode: "0600"
         owner: "{{ borgbackup_user }}"
         group: "{{ borgbackup_group }}"

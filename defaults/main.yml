@@ -6,7 +6,6 @@ borgbackup_borg_repo: "/mnt/backup/borg-backups"
 
 borgbackup_backup_device: "sda"
 borgbackup_backup_device_id_serial_short: ""
-borgbackup_backup_device_password: ""
 borgbackup_backup_device_keyfile: "{{ borgbackup_config_dir }}/keyfile"
 borgbackup_backup_device_symlink: "backupDisk"
 # If you change this, you need to also change the name of the mount service
