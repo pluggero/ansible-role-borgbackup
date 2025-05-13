@@ -3,7 +3,7 @@
   hosts: all
 
   vars_files:
-    - ../../vars/molecule_vars.yml
+    - ../../vars/molecule.yml
 
   tasks:
     - name: Include OS-specific variables
