@@ -1,21 +1,27 @@
 # Managed by Ansible, please don't edit manually
 P {{ borgbackup_patterns.style }}
 
+# List of recursion roots. These define starting points for backups.
 {# Recursion roots #}
 {% for root in borgbackup_patterns.roots %}
 R {{ root }}
 {% endfor %}
 
+# Files or directories to explicitly include,
+# even if they fall under an exclude rule.
 {# Include patterns #}
 {% for include in borgbackup_patterns.includes %}
 + {{ include }}
 {% endfor %}
 
+# Files or directories to exclude (recursive by default).
 {# Exclude patterns #}
 {% for exclude in borgbackup_patterns.excludes %}
 - {{ exclude }}
 {% endfor %}
 
+# Files or directories to exclude without descending into them.
+# No chance to include them again.
 {# Exclude (no-recurse) patterns #}
 {% for norecurse in borgbackup_patterns.excludes_no_recurse %}
 ! {{ norecurse }}
