@@ -56,7 +56,7 @@ borgbackup_options:
 - This is the retention policy for the backups.
 
 ```yaml
-borg_patterns:
+borgbackup_patterns:
   # Pattern style:
   # - sh: shell-style (e.g. *.log, /home/*)
   # - re: regular expressions

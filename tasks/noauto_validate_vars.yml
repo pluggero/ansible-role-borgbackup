@@ -14,3 +14,28 @@
     fail_msg: >-
       The value of "borgbackup_backup_device_id_serial_short" ({{ borgbackup_backup_device_id_serial_short }}) is empty.
     success_msg: "The value of 'borgbackup_backup_device_id_serial_short' is valid."
+
+- name: Validate borgbackup_options keys exist and are integers
+  ansible.builtin.assert:
+    that:
+      - borgbackup_options is mapping
+      - borgbackup_options.keep_daily is defined
+      - borgbackup_options.keep_weekly is defined
+      - borgbackup_options.keep_monthly is defined
+      - borgbackup_options.keep_daily | int >= 0
+      - borgbackup_options.keep_weekly | int >= 0
+      - borgbackup_options.keep_monthly | int >= 0
+    fail_msg: "One or more retention settings in borgbackup_options are missing or invalid."
+    success_msg: "borgbackup_options is valid."
+
+- name: Validate borgbackup_patterns
+  ansible.builtin.assert:
+    that:
+      - borgbackup_patterns is mapping
+      - borgbackup_patterns.style in ['sh', 're', 'pf', 'fm', 'pp']
+      - borgbackup_patterns.roots is iterable
+      - borgbackup_patterns.includes is iterable
+      - borgbackup_patterns.excludes is iterable
+      - borgbackup_patterns.excludes_no_recurse is iterable
+    fail_msg: "borgbackup_patterns has invalid structure or values."
+    success_msg: "borgbackup_patterns is valid."
