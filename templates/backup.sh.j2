@@ -1,78 +1,92 @@
 # Managed by Ansible, please don't edit manually
 #!/bin/sh
 
-#
-# conf
-#
+set -euo pipefail
 
-# Setting this, so the repo does not need to be given on the commandline:
+# -----------------------------------------------------------------------------
+# Configuration
+# -----------------------------------------------------------------------------
+
 export BORG_REPO={{ borgbackup_borg_repo }}
-
-#
-# Create backups
-#
-
-# Avoid Borg hanging
 export BORG_RELOCATED_REPO_ACCESS_IS_OK=no
 export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=yes
 
-# Log Borg version
-borg --version
-DATE=$(hostname)-$(date --iso-8601)
-echo "Starting backup for $DATE"
-# display notification that backup is starting
-sudo -u {{ borgbackup_user }} DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Starting backup for $DATE"
+LOG() {
+    echo "[$(date --iso-8601=seconds)] $*"
+}
 
-borg create                         \
-    --verbose                       \
-    --list                          \
-    --stats                         \
-    --show-rc                       \
-    --one-file-system               \
-    --progress                      \
-    --compression lz4               \
-    --exclude-caches                \
-    --patterns-from /etc/backups/borgPatterns.lst   \
-    ::'{hostname}-{now}'
+DATE="$(hostname)-$(date --iso-8601)"
+LOG "Starting backup for ${DATE}"
 
-backup_exit=$?
+# -----------------------------------------------------------------------------
+# Backup
+# -----------------------------------------------------------------------------
 
-#info "Pruning repository"
+run_backup() {
+    borg create \
+        --verbose \
+        --list \
+        --stats \
+        --show-rc \
+        --one-file-system \
+        --progress \
+        --compression lz4 \
+        --exclude-caches \
+        --patterns-from /etc/backups/borgPatterns.lst \
+        ::'{hostname}-{now}'
+    return $?
+}
 
-# Use the `prune` subcommand to maintain 14 daily, 8 weekly and 12 monthly
-# archives of THIS machine. The '{hostname}-*' matching is very important to
-# limit prune's operation to this machine's archives and not apply to
-# other machines' archives also:
+# -----------------------------------------------------------------------------
+# Prune
+# -----------------------------------------------------------------------------
 
-borg prune                          \
-    --list                          \
-    --glob-archives '{hostname}-*'  \
-    --show-rc                       \
-    --keep-daily    {{ borgbackup_options.keep_daily }}              \
-    --keep-weekly   {{ borgbackup_options.keep_weekly }}               \
-    --keep-monthly  {{ borgbackup_options.keep_monthly }}              \
- 
+run_prune() {
+    borg prune \
+        --list \
+        --glob-archives '{hostname}-*' \
+        --show-rc \
+        --keep-daily    {{ borgbackup_options.keep_daily }} \
+        --keep-weekly   {{ borgbackup_options.keep_weekly }} \
+        --keep-monthly  {{ borgbackup_options.keep_monthly }}
+    return $?
+}
 
-prune_exit=$?
+# -----------------------------------------------------------------------------
+# Compact
+# -----------------------------------------------------------------------------
 
-# actually free repo disk space by compacting segments
+run_compact() {
+    borg compact
+    return $?
+}
 
-#info "Compacting repository"
+# -----------------------------------------------------------------------------
+# Execute and Evaluate
+# -----------------------------------------------------------------------------
 
-borg compact
+backup_exit=0
+prune_exit=0
+compact_exit=0
 
-compact_exit=$?
+run_backup || backup_exit=$?
+run_prune  || prune_exit=$?
+run_compact || compact_exit=$?
 
-# use highest exit code as global exit code
-global_exit=$(( backup_exit > prune_exit ? backup_exit : prune_exit ))
-global_exit=$(( compact_exit > global_exit ? compact_exit : global_exit ))
+# Determine global exit status
+global_exit=$((backup_exit > prune_exit ? backup_exit : prune_exit))
+global_exit=$((compact_exit > global_exit ? compact_exit : global_exit))
 
-if [ ${global_exit} -eq 0 ]; then
-    sudo -u {{ borgbackup_user }} DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Backup, Prune, and Compact finished successfully"
-elif [ ${global_exit} -eq 1 ]; then
-    sudo -u {{ borgbackup_user }} DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Backup, Prune, and/or Compact finished with warnings"
-else
-    sudo -u {{ borgbackup_user }} DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus notify-send "Backup, Prune, and/or Compact finished with errors"
-fi
+case $global_exit in
+    0)
+        LOG "Backup, Prune, and Compact finished successfully."
+        ;;
+    1)
+        LOG "Backup, Prune, and/or Compact finished with warnings."
+        ;;
+    *)
+        LOG "Backup, Prune, and/or Compact finished with errors."
+        ;;
+esac
 
-exit ${global_exit}
+exit $global_exit
