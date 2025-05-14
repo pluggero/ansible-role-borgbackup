@@ -11,8 +11,8 @@ borgbackup_backup_device_symlink: "backupDisk"
 # If you change this, you need to also change the name of the mount service
 borgbackup_backup_device_mountpoint: "/mnt/backup"
 
-borgbackup_user: "{{ ansible_user }}"
-borgbackup_group: "{{ ansible_user }}"
+borgbackup_user: "root"
+borgbackup_group: "root"
 
 # Retention policy for pruning old backups
 borgbackup_options:
@@ -41,5 +41,6 @@ borgbackup_patterns:
   excludes: []
 
   # Files or directories to exclude without descending into them.
+  # No chance to include them again.
   # Useful to skip large folders quickly.
   excludes_no_recurse: []
