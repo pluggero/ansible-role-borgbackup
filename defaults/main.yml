@@ -20,8 +20,7 @@ borgbackup_options:
   keep_weekly: 4 # Number of weekly backups to keep
   keep_monthly: 6 # Number of monthly backups to keep
 
-# All Borg matching patterns grouped under one variable
-borg_patterns:
+borgbackup_patterns:
   # Pattern style:
   # - sh: shell-style (e.g. *.log, /home/*)
   # - re: regular expressions
