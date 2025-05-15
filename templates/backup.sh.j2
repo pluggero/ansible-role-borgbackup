@@ -16,13 +16,30 @@ LOG() {
 }
 
 DATE="$(hostname)-$(date --iso-8601)"
-LOG "Starting backup for ${DATE}"
+LOG "Starting backup process for ${DATE}"
+
+# -----------------------------------------------------------------------------
+# Helper for Running Steps with Logging
+# -----------------------------------------------------------------------------
+
+run_step() {
+    local step_name="$1"
+    shift
+    LOG "Starting: $step_name"
+    if "$@"; then
+        LOG "Finished: $step_name successfully."
+        return 0
+    else
+        LOG "Error: $step_name failed."
+        return 1
+    fi
+}
 
 # -----------------------------------------------------------------------------
 # Backup
 # -----------------------------------------------------------------------------
 
-run_backup() {
+do_backup() {
     borg create \
         --verbose \
         --list \
@@ -32,16 +49,15 @@ run_backup() {
         --progress \
         --compression lz4 \
         --exclude-caches \
-        --patterns-from /etc/backups/borgPatterns.lst \
+        --patterns-from {{ borgbackup_config_dir }}/borgPatterns.lst \
         ::'{hostname}-{now}'
-    return $?
 }
 
 # -----------------------------------------------------------------------------
 # Prune
 # -----------------------------------------------------------------------------
 
-run_prune() {
+do_prune() {
     borg prune \
         --list \
         --glob-archives '{hostname}-*' \
@@ -49,43 +65,44 @@ run_prune() {
         --keep-daily    {{ borgbackup_options.keep_daily }} \
         --keep-weekly   {{ borgbackup_options.keep_weekly }} \
         --keep-monthly  {{ borgbackup_options.keep_monthly }}
-    return $?
 }
 
 # -----------------------------------------------------------------------------
 # Compact
 # -----------------------------------------------------------------------------
 
-run_compact() {
+do_compact() {
     borg compact
-    return $?
 }
 
 # -----------------------------------------------------------------------------
-# Execute and Evaluate
+# Execute
 # -----------------------------------------------------------------------------
 
 backup_exit=0
 prune_exit=0
 compact_exit=0
 
-run_backup || backup_exit=$?
-run_prune  || prune_exit=$?
-run_compact || compact_exit=$?
+run_step "Backup" do_backup || backup_exit=$?
+run_step "Prune" do_prune   || prune_exit=$?
+run_step "Compact" do_compact || compact_exit=$?
 
-# Determine global exit status
+# -----------------------------------------------------------------------------
+# Final Evaluation
+# -----------------------------------------------------------------------------
+
 global_exit=$((backup_exit > prune_exit ? backup_exit : prune_exit))
 global_exit=$((compact_exit > global_exit ? compact_exit : global_exit))
 
 case $global_exit in
     0)
-        LOG "Backup, Prune, and Compact finished successfully."
+        LOG "All steps completed successfully."
         ;;
     1)
-        LOG "Backup, Prune, and/or Compact finished with warnings."
+        LOG "One or more steps completed with warnings."
         ;;
     *)
-        LOG "Backup, Prune, and/or Compact finished with errors."
+        LOG "One or more steps failed. Check logs above."
         ;;
 esac
 
