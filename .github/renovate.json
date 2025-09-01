@@ -3,6 +3,19 @@
     "config:best-practices",
     ":disableRateLimiting"
   ],
+  "automerge": false,
+  "automergeType": "pr",
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions", "pip_requirements"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "automerge": false
+    }
+  ],
   "enabledManagers": [
     "github-actions",
     "pip_requirements",
@@ -56,13 +69,5 @@
       "defaultRegistryUrlTemplate": "https://download.virtualbox.org/virtualbox/LATEST-STABLE.TXT",
       "format": "plain"
     }
-  },
-  "packageRules": [
-    {
-      "matchPackageNames": [
-        "virtualbox"
-      ],
-      "groupName": "Update Virtualbox version"
-    }
-  ]
+  }
 }
