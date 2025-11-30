@@ -20,6 +20,12 @@
       "matchDepNames": ["python/cpython"],
       "automerge": true,
       "automergeType": "pr"
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "matchDepNames": ["pluggero/vagrant-debian12-ansible", "pluggero/vagrant-archlinux-ansible"],
+      "automerge": true,
+      "automergeType": "pr"
     }
   ],
   "enabledManagers": [
