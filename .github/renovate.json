@@ -23,7 +23,7 @@
     },
     {
       "matchManagers": ["custom.regex"],
-      "matchDepNames": ["pluggero/vagrant-debian12-ansible", "pluggero/vagrant-archlinux-ansible"],
+      "matchDepNames": ["/^pluggero\\/vagrant-.*-ansible$/"],
       "automerge": true,
       "automergeType": "pr"
     }
