@@ -5,15 +5,18 @@
   when: ansible_pkg_mgr != "pacman"
 
 - name: Install borgbackup via pacman
-  when: ansible_pkg_mgr == "pacman"
   block:
     - name: Update pacman cache
       community.general.pacman:
         update_cache: true
+      changed_when: false # The pacman module currently does not support cache_valid_time.
       become: true
 
     - name: Ensure borgbackup is installed
       community.general.pacman:
-        name: "{{ borgbackup_distro_pkgs }}"
+        name: "{{ package }}"
         state: present
+      loop: "{{ borgbackup_distro_pkgs }}"
+      loop_control:
+        loop_var: package
       become: true
