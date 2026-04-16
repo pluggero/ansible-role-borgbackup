@@ -4,7 +4,6 @@ borgbackup_install_method: "package"
 borgbackup_config_dir: "/etc/backups"
 borgbackup_borg_repo: "/mnt/backup/borg-backups"
 
-borgbackup_backup_device: "sda"
 borgbackup_backup_device_id_serial_short: ""
 borgbackup_backup_device_keyfile: "{{ borgbackup_config_dir }}/keyfile"
 borgbackup_backup_device_symlink: "backupDisk"
