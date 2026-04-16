@@ -16,18 +16,12 @@ You can also manually add the keyfile to this location if you want to use a diff
 For adding the keyfile to the external disk by running the following command (adjust the device accordingly):
 
 ```bash
-sudo cryptsetup luksAddKey /dev/sda /path/to/keyfile
+sudo cryptsetup luksAddKey /dev/<your-backup-disk> /path/to/keyfile
 ```
 
 ## Role Variables
 
 Available variables are listed below, along with default values (see `defaults/main.yml`):
-
-```yaml
-borg_backup_device: "sda"
-```
-
-- This is the device of the external disk
 
 ```yaml
 borgbackup_backup_device_keyfile: "{{ borgbackup_config_dir }}/keyfile"
@@ -36,14 +30,20 @@ borgbackup_backup_device_keyfile: "{{ borgbackup_config_dir }}/keyfile"
 - The password is stored in a keyfile. This is the path to the keyfile.
 
 ```yaml
-borg_backup_device_id_serial_short: ""
+borgbackup_backup_device_id_serial_short: ""
 ```
 
-- This is the serial number of the external disk. This is used to identify the disk when it is connected.
-- **NOTE**: You can find out the device ID by running the following command (adjust the device accordingly):
+- The serial number of the external disk. Used by the udev rule to identify the disk regardless of its assigned device name (e.g. `sda`, `sdb`).
+- **NOTE**: You can find the serial number by running:
 
 ```
-sudo udevadm info -n /dev/sda | grep SERIAL
+sudo udevadm info -n /dev/disk/by-id/<your-disk> | grep ID_SERIAL_SHORT
+```
+
+  Or for any connected block device:
+
+```
+udevadm info /dev/sda | grep ID_SERIAL_SHORT
 ```
 
 ```yaml
