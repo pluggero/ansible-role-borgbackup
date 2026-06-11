@@ -6,6 +6,10 @@ borgbackup_borg_repo: "/mnt/backup/borg-backups"
 
 borgbackup_backup_device_id_serial_short: ""
 borgbackup_backup_device_keyfile: "{{ borgbackup_config_dir }}/keyfile"
+# Optional: base64-encoded keyfile content. When set, this is decoded and written
+# to borgbackup_backup_device_keyfile instead of generating from /dev/urandom.
+# Use ansible-vault to encrypt this value. Leave empty to auto-generate.
+borgbackup_keyfile_content_b64: ""
 borgbackup_backup_device_symlink: "backupDisk"
 # If you change this, you need to also change the name of the mount service
 borgbackup_backup_device_mountpoint: "/mnt/backup"
