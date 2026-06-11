@@ -37,11 +37,22 @@
         group: "{{ borgbackup_group }}"
       become: true
 
+    - name: Write keyfile from provided base64 content
+      ansible.builtin.copy:
+        content: "{{ borgbackup_keyfile_content_b64 | b64decode }}"
+        dest: "{{ borgbackup_backup_device_keyfile }}"
+        mode: "0600"
+        owner: "{{ borgbackup_user }}"
+        group: "{{ borgbackup_group }}"
+      become: true
+      when: borgbackup_keyfile_content_b64 | length > 0
+
     - name: Create keyfile from /dev/urandom if it does not exist
       ansible.builtin.command:
         cmd: "dd if=/dev/urandom of={{ borgbackup_backup_device_keyfile }} bs=1024 count=4"
         creates: "{{ borgbackup_backup_device_keyfile }}"
       become: true
+      when: borgbackup_keyfile_content_b64 | length == 0
 
     - name: Set file permissions on keyfile
       ansible.builtin.file:
