@@ -6,5 +6,9 @@ borgbackup_dep_pkgs:
   - hostname
   - cryptsetup # For LUKS
 
+borgbackup_fuse_pkgs:
+  - fuse3
+  - python3-pyfuse3
+
 borgbackup_distro_pkgs:
   - borgbackup

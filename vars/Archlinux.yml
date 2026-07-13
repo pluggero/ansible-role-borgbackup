@@ -6,5 +6,9 @@ borgbackup_dep_pkgs:
   - inetutils # For hostname
   - cryptsetup # For LUKS
 
+borgbackup_fuse_pkgs:
+  - fuse3
+  - python-pyfuse3
+
 borgbackup_distro_pkgs:
   - borg

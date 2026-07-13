@@ -1,6 +1,9 @@
 ---
 borgbackup_install_method: "package"
 
+# Install FUSE support (fuse3 + python FUSE bindings) so `borg mount` works on this host.
+borgbackup_install_fuse_support: false
+
 borgbackup_config_dir: "/etc/backups"
 borgbackup_borg_repo: "/mnt/backup/borg-backups"
 
