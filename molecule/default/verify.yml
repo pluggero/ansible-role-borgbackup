@@ -29,6 +29,18 @@
         state: present
       become: true
 
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+
+    - name: Assert FUSE support packages are installed
+      ansible.builtin.assert:
+        that:
+          - fuse_package in ansible_facts.packages
+        fail_msg: "{{ fuse_package }} is not installed"
+      loop: "{{ borgbackup_fuse_pkgs }}"
+      loop_control:
+        loop_var: fuse_package
+
     - name: Create fake backup disk
       block:
         - name: Create a 200MB disk image

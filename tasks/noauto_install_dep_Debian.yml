@@ -20,3 +20,13 @@
       loop_control:
         loop_var: package
       become: true
+
+    - name: Ensure FUSE support packages are installed
+      ansible.builtin.apt:
+        name: "{{ package }}"
+        state: present
+      loop: "{{ borgbackup_fuse_pkgs }}"
+      loop_control:
+        loop_var: package
+      become: true
+      when: borgbackup_install_fuse_support | bool

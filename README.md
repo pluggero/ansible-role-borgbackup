@@ -19,6 +19,8 @@ For adding the keyfile to the external disk by running the following command (ad
 sudo cryptsetup luksAddKey /dev/<your-backup-disk> /path/to/keyfile
 ```
 
+To browse a backup with `borg mount`, the host needs FUSE support installed. This role does not install it by default; set `borgbackup_install_fuse_support: true` (see below).
+
 ## Role Variables
 
 Available variables are listed below, along with default values (see `defaults/main.yml`):
@@ -51,7 +53,7 @@ borgbackup_backup_device_id_serial_short: ""
 sudo udevadm info -n /dev/disk/by-id/<your-disk> | grep ID_SERIAL_SHORT
 ```
 
-  Or for any connected block device:
+Or for any connected block device:
 
 ```
 udevadm info /dev/sda | grep ID_SERIAL_SHORT
@@ -93,6 +95,12 @@ borgbackup_patterns:
 ```
 
 - This is the list of files and directories to include and exclude from the backup.
+
+```yaml
+borgbackup_install_fuse_support: false
+```
+
+- Whether to install FUSE support (`fuse3` and a Python FUSE binding) so `borg mount` works on this host. Disabled by default since it's only needed on hosts where you plan to browse a repository with `borg mount`.
 
 ## Dependencies
 
