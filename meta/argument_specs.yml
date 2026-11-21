@@ -1,0 +1,138 @@
+---
+argument_specs:
+  main:
+    short_description: Installs and configures Borg Backup with an encrypted, udev-mounted backup disk.
+    description: >-
+      Installs borgbackup, sets up an encrypted backup disk (LUKS keyfile, udev symlink,
+      systemd automount), and configures the backup repository, retention policy, and
+      file patterns used for backups.
+    options:
+      borgbackup_install_method:
+        type: str
+        required: false
+        default: "package"
+        choices:
+          - package
+        description: Installation method used to install borgbackup. Currently only installation via the OS package manager is implemented.
+      borgbackup_install_fuse_support:
+        type: bool
+        required: false
+        default: false
+        description: Install FUSE support (fuse3 + python FUSE bindings) so `borg mount` works on this host.
+      borgbackup_config_dir:
+        type: path
+        required: false
+        default: "/etc/backups"
+        description: Directory where borgbackup configuration files (e.g. the keyfile) are stored.
+      borgbackup_borg_repo:
+        type: path
+        required: false
+        default: "/mnt/backup/borg-backups"
+        description: Path to the Borg repository used for backups (exported as BORG_REPO).
+      borgbackup_backup_device_id_serial_short:
+        type: str
+        required: false
+        default: ""
+        description: >-
+          Short serial ID (udev ID_SERIAL_SHORT) of the backup block device, used by the udev
+          rule to identify the disk regardless of its assigned device name. Must be set to a
+          non-empty value; the role fails at runtime (see tasks/noauto_validate_vars.yml) if
+          left at the default.
+      borgbackup_backup_device_keyfile:
+        type: path
+        required: false
+        default: "{{ borgbackup_config_dir }}/keyfile"
+        description: Path to the LUKS keyfile used to unlock the backup device.
+      borgbackup_keyfile_content_b64:
+        type: str
+        required: false
+        default: ""
+        no_log: true
+        description: >-
+          Optional base64-encoded keyfile content. When set, this is decoded and written to
+          borgbackup_backup_device_keyfile instead of generating a random keyfile from
+          /dev/urandom. Encrypt with ansible-vault. Leave empty to auto-generate.
+      borgbackup_backup_device_symlink:
+        type: str
+        required: false
+        default: "backupDisk"
+        description: Name of the udev symlink created for the backup device.
+      borgbackup_backup_device_mountpoint:
+        type: path
+        required: false
+        default: "/mnt/backup"
+        description: >-
+          Mountpoint for the decrypted backup device. Changing this also requires renaming
+          the corresponding systemd mount unit.
+      borgbackup_user:
+        type: str
+        required: false
+        default: "root"
+        description: User that owns the backup configuration and runs the backup.
+      borgbackup_group:
+        type: str
+        required: false
+        default: "root"
+        description: Group that owns the backup configuration and runs the backup.
+      borgbackup_options:
+        type: dict
+        required: false
+        description: Retention policy used when pruning old backups.
+        options:
+          keep_daily:
+            type: int
+            required: false
+            default: 7
+            description: Number of daily backups to keep.
+          keep_weekly:
+            type: int
+            required: false
+            default: 4
+            description: Number of weekly backups to keep.
+          keep_monthly:
+            type: int
+            required: false
+            default: 6
+            description: Number of monthly backups to keep.
+      borgbackup_patterns:
+        type: dict
+        required: false
+        description: Borg --patterns-from configuration controlling what is backed up.
+        options:
+          style:
+            type: str
+            required: false
+            default: "sh"
+            choices:
+              - sh
+              - re
+              - pf
+              - fm
+              - pp
+            description: >-
+              Pattern style used for roots/includes/excludes: sh (shell-style), re (regular
+              expressions), pf (path prefix), fm (file magic), or pp (pattern prefix).
+          roots:
+            type: list
+            elements: str
+            required: false
+            default: []
+            description: List of recursion roots. Must be plain paths (no globs).
+          includes:
+            type: list
+            elements: str
+            required: false
+            default: []
+            description: Files or directories to explicitly include, even if they fall under an exclude rule.
+          excludes:
+            type: list
+            elements: str
+            required: false
+            default: []
+            description: Files or directories to exclude (recursive by default).
+          excludes_no_recurse:
+            type: list
+            elements: str
+            required: false
+            default: []
+            description: Files or directories to exclude without descending into them.
